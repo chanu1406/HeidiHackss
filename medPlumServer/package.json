@@ -2,15 +2,18 @@
   "name": "medplumserver",
   "version": "1.0.0",
   "description": "",
-  "main": "server.ts",
+  "main": "dist/server.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "nodemon --exec node --loader ts-node/esm server.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "modulejs",
   "dependencies": {
+    "axios": "^1.13.2",
     "express": "^5.1.0"
   },
   "devDependencies": {
