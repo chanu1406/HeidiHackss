@@ -177,6 +177,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const heidiSessionId = patientSelection?.heidiSessionId;
+
     console.log('[Session Start] Extracted patient data:', {
       id: patientData.id,
       name: patientData.fullName,
@@ -200,6 +202,7 @@ export async function POST(request: NextRequest) {
       address: patientAddress,
       generalPractitioner,
       organizationAddress,
+      heidiSessionId,
       insurance, // Use extracted insurance
       // Include additional fields for questionnaire autofill
       gender: patientData.gender,
