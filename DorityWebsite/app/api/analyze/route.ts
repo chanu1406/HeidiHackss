@@ -430,13 +430,36 @@ For a group linkId "exam-details" containing "examType" and "bodyRegion", format
 
     // Validate each action and fill missing fields with smart dummy data
     const validatedActions = [];
-    
+
     for (const action of parsedResponse.actions) {
       // Basic validation
-      if (!action.type || !action.description || !action.resource) {
+      if (!action.type || !action.description) {
         console.warn('[Analyze] Skipping invalid action:', action);
         continue;
       }
+
+      // Validate resource is present (except for scheduling which only needs email fields)
+      if (action.type !== 'scheduling' && !action.resource) {
+        console.warn('[Analyze] Skipping action missing resource:', action);
+        continue;
+      }
+
+      // For scheduling, ensure we have the required email fields
+      if (action.type === 'scheduling') {
+        if (!action.subject && !action.body) {
+          console.warn('[Analyze] Skipping scheduling action missing email fields:', action);
+          continue;
+        }
+        // Add a default Appointment resource if not provided
+        if (!action.resource) {
+          action.resource = {
+            resourceType: 'Appointment',
+            status: 'proposed',
+            description: action.description
+          };
+        }
+      }
+
       if (!['medication', 'lab', 'imaging', 'referral', 'followup', 'questionnaire_response', 'scheduling'].includes(action.type)) {
         console.warn('[Analyze] Skipping action with invalid type:', action.type);
         continue;
@@ -484,7 +507,23 @@ For a group linkId "exam-details" containing "examType" and "bodyRegion", format
       validatedActions.push(action);
     }
 
-    console.log(`[Analyze] Successfully processed ${validatedActions.length} actions`);
+    // Log action types for debugging
+    const actionSummary = validatedActions.reduce((acc: any, action: any) => {
+      acc[action.type] = (acc[action.type] || 0) + 1;
+      return acc;
+    }, {});
+    console.log(`[Analyze] Successfully processed ${validatedActions.length} actions:`, actionSummary);
+
+    // Log scheduling actions specifically
+    const schedulingActions = validatedActions.filter((a: any) => a.type === 'scheduling');
+    if (schedulingActions.length > 0) {
+      console.log(`[Analyze] Scheduling actions:`, schedulingActions.map((a: any) => ({
+        description: a.description,
+        hasSubject: !!a.subject,
+        hasBody: !!a.body,
+        hasResource: !!a.resource
+      })));
+    }
 
     return NextResponse.json({
       actions: validatedActions,
