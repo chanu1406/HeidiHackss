@@ -60,6 +60,9 @@ function categorizeQuestionnaire(q: Questionnaire): string {
   if (searchText.includes('referral') || searchText.includes('consult')) {
     return 'referral';
   }
+  if (searchText.includes('followup') || searchText.includes('follow-up') || searchText.includes('follow up')) {
+    return 'followup';
+  }
   if (searchText.includes('phq') || searchText.includes('health questionnaire')) {
     return 'assessment';
   }
