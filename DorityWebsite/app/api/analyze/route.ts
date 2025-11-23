@@ -64,7 +64,14 @@ TYPE DEFINITIONS:
      - "reason": Internal reason for the scheduling (brief).
      - "when": Suggested time (brief).
      - "subject": A user-friendly email subject line.
-     - "body": A warm, user-friendly email body that reads through the context in the transcript, summarizes after-meeting instructions, and includes follow-up meeting time if necessary. Do not include any other context or meta-text.
+     - "body": A warm, user-friendly email body that:
+       * Summarizes key information from the consultation
+       * Includes follow-up instructions and timing if applicable
+       * MUST include patient's insurance information if provided (e.g., "Insurance: Blue Cross Blue Shield")
+       * MUST include practitioner information if provided (e.g., "Practitioner: Dr. Smith" and address)
+       * MUST include preferred pharmacy if provided (e.g., "Practitioner Address: 123 Main St")
+       * Uses a professional yet warm tone
+       * Only includes information that has actual values (skip fields marked as "Not specified")
 
 OUTPUT FORMAT (raw JSON only):
 {
@@ -133,16 +140,15 @@ OUTPUT FORMAT (raw JSON only):
     },
     {
       "type": "scheduling",
-      "description": "Schedule a meeting to review surgical options",
-      "reason": "Patient requested detailed discussion about surgical risks and benefits",
-      "when": "Next Tuesday afternoon",
-      "subject": "Follow-up: Surgical Options Discussion",
-      "body": "Hi [Patient Name],\n\nIt was good to speak with you today. As discussed, we should schedule a time next Tuesday afternoon to go over the surgical options in more detail. Please let us know what time works best for you.\n\nBest regards,\nDr. Smith",
+      "description": "Send follow-up email regarding care plan",
+      "reason": "Patient needs follow-up instructions and care plan details",
+      "when": "Within 24 hours",
+      "subject": "Your Care Plan and Next Steps",
+      "body": "Dear [Patient Name],\n\nThank you for coming in today. Based on our consultation, here's a summary of your care plan:\n\n[Summary of key points from consultation]\n\nNext Steps:\n1. [Follow-up instruction 1]\n2. [Follow-up instruction 2]\n\nYour Information:\nInsurance: [Patient Insurance from Medplum]\nPreferred Pharmacy: [Patient Pharmacy from Medplum]\nPractitioner: [Practitioner Name]\nPractitioner Address: [Practitioner Address]\n\nIf you have any questions, please don't hesitate to contact us.\n\nBest regards,\nYour Care Team",
       "resource": {
         "resourceType": "Appointment",
         "status": "proposed",
-        "description": "Meeting to review surgical options",
-        "start": "2023-11-28T14:00:00Z" 
+        "description": "Follow-up communication regarding care plan"
       }
     }
   ]
@@ -349,7 +355,7 @@ For a group linkId "exam-details" containing "examType" and "bodyRegion", format
     
     // Add patient data for better autofill
     if (patient) {
-      userMessage += `\n\n**PATIENT INFORMATION (Use this to fill patient fields):**
+      userMessage += `\n\n**PATIENT INFORMATION (Use this to fill patient fields and email bodies):**
 - Patient Name: ${patient.name || 'Unknown'}
 - Date of Birth: ${patient.dob || 'Unknown'}
 - Age: ${patient.age || 'Unknown'}
@@ -358,8 +364,15 @@ For a group linkId "exam-details" containing "examType" and "bodyRegion", format
 - Phone: ${patient.phone || 'Unknown'}
 - Email: ${patient.email || 'Unknown'}
 - Address: ${patient.address || 'Unknown'}
+- Insurance: ${patient.insurance || 'Not specified'}
+- Preferred Pharmacy: ${patient.preferredPharmacy || 'Not specified'}
+- Primary Care Provider: ${patient.generalPractitioner || 'Not specified'}
+- Organization Address: ${patient.organizationAddress || 'Not specified'}
 
-**CRITICAL: When generating QuestionnaireResponse items, USE THE EXACT VALUES ABOVE for patient demographic fields!**`;
+**CRITICAL INSTRUCTIONS:**
+1. When generating QuestionnaireResponse items, USE THE EXACT VALUES ABOVE for patient demographic fields!
+2. When generating scheduling email bodies, INCLUDE the insurance, pharmacy, and practitioner information if specified above.
+3. Do NOT use "Not specified" in email bodies - only include fields that have actual values.`;
     } else if (patientContext) {
       userMessage += `\n\nPatient Context:\n${patientContext}`;
     }
