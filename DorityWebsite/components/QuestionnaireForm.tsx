@@ -57,7 +57,8 @@ function QuestionnaireItemRenderer({
   const renderInput = () => {
     // Check if field is empty and required for highlighting
     const isEmpty = !itemValue || itemValue === '';
-    const needsAttention = isRequired && isEmpty && isEditable;
+    // HIGHLIGHT ALL EMPTY FIELDS, not just required ones
+    const needsAttention = isEmpty && isEditable;
     
     switch (item.type) {
       case 'string':
@@ -367,10 +368,18 @@ export default function QuestionnaireForm({
       console.log('[QuestionnaireForm] LinkIds extracted:', Object.keys(extractedResponses));
       console.log('[QuestionnaireForm] Setting responses state...');
       
-      // WORKAROUND: If medication-name exists but medication doesn't, copy it over
-      if (extractedResponses['medication-name'] && !extractedResponses['medication']) {
-        console.log('[QuestionnaireForm] 🔧 Copying medication-name to medication field');
-        extractedResponses['medication'] = extractedResponses['medication-name'];
+      // WORKAROUND: Map common field mismatches
+      const fieldMappings: Record<string, string> = {
+        'medication-name': 'medication',
+        'medication-strength': 'strength',
+        'medication-form': 'form',
+      };
+      
+      for (const [fromField, toField] of Object.entries(fieldMappings)) {
+        if (extractedResponses[fromField] && !extractedResponses[toField]) {
+          console.log(`[QuestionnaireForm] 🔧 Mapping ${fromField} → ${toField}: "${extractedResponses[fromField]}"`);
+          extractedResponses[toField] = extractedResponses[fromField];
+        }
       }
       
       setResponses(extractedResponses);

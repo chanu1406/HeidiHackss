@@ -84,7 +84,41 @@ function calculateCompletionPercentage(action: SuggestedAction, questionnaireDef
     const counts = countItems(items);
     console.log(`[Completion] Required fields: ${counts.total}, Filled: ${counts.filled}, Percentage: ${Math.round((counts.filled / counts.total) * 100)}%`);
     console.log('[Completion] Required field linkIds:', Array.from(requiredFields));
-    if (counts.total === 0) return 100; // No required fields = 100%
+    
+    // If no required fields, check if ANY fields have values to show progress
+    if (counts.total === 0) {
+      // Count ALL fields (not just required) to see if anything is filled
+      let totalFields = 0;
+      let filledFields = 0;
+      
+      const countAllFields = (itemList: any[]) => {
+        for (const item of itemList) {
+          if (item.item && Array.isArray(item.item)) {
+            countAllFields(item.item);
+          } else if (item.linkId && !item.linkId.includes('display')) {
+            totalFields += 1;
+            if (item.answer && item.answer.length > 0) {
+              const answer = item.answer[0];
+              const hasValue = 
+                (answer.valueString && answer.valueString.trim() !== '' && answer.valueString !== 'N/A' && answer.valueString !== 'Unknown') ||
+                (answer.valueBoolean !== undefined && answer.valueBoolean !== null) ||
+                (answer.valueInteger !== undefined && answer.valueInteger !== null) ||
+                (answer.valueDecimal !== undefined && answer.valueDecimal !== null) ||
+                (answer.valueDate && answer.valueDate !== '') ||
+                (answer.valueCoding && answer.valueCoding.code);
+              if (hasValue) filledFields += 1;
+            }
+          }
+        }
+      };
+      
+      countAllFields(items);
+      console.log(`[Completion] No required fields - counting all fields: ${totalFields} total, ${filledFields} filled`);
+      
+      if (totalFields === 0) return 0; // If no fields at all, show 0% not 100%
+      return Math.round((filledFields / totalFields) * 100);
+    }
+    
     return Math.round((counts.filled / counts.total) * 100);
   }
 
