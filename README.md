@@ -15,7 +15,7 @@ This Next.js application sits alongside an EMR system and uses AI to listen to p
 It integrates with:
 
 - **Medplum** - Headless FHIR server (backend)
-- **Claude 3.5 Sonnet** - AI for clinical intent extraction
+- **Claude 4.5 Sonnet** - AI for clinical intent extraction
 - **Heidi API** - Consultation transcripts
 
 ## Tech Stack
